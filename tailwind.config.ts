@@ -14,7 +14,6 @@ export default {
     	extend: {
     		fontFamily: {
     			body: [
-    				'Turret_Road',
     				'sans-serif'
     			]
     		},

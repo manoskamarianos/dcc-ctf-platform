@@ -15,7 +15,8 @@ import {
   Users, 
   LogIn, 
   UserPlus, 
-  Menu 
+  Menu,
+  Info
 } from "lucide-react";
 import "@/scss/components/header.component.scss";
 
@@ -58,6 +59,10 @@ export default function Header() {
             <Link href="/teams" className="flex items-center gap-1 p-2 hover:bg-gray-900 rounded-md transition-colors">
               <Users size={18} />
               <span>Teams</span>
+            </Link>
+            <Link href="/about" className="flex items-center gap-1 p-2 hover:bg-gray-900 rounded-md transition-colors">
+              <Info size={18} />
+              <span>About</span>
             </Link>
           </div>
         </div>
