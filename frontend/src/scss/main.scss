@@ -1,0 +1,10 @@
+// 1. Tailwind and Base Resets
+@use "base/reset";
+@use "base/typography";
+
+// 2. Theme Variables
+@use "theme/variables";
+
+// 3. Components
+@use "components/header";
+// @use "components/layout"; // If you have content for this
