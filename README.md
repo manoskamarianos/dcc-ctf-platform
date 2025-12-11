@@ -74,3 +74,6 @@ Start the development server:
 ```bash
 bun dev
 ```
+
+### 📄 License
+This project is licensed under the GPL-2.0 license.
