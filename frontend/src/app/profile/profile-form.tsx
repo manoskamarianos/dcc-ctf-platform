@@ -66,10 +66,12 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
             </CardHeader>
             <CardContent className="pt-8">
                 <form action={handleSubmit} className="space-y-8">
-                    
                     {/* Email (Read Only) */}
                     <div className="space-y-3 opacity-60">
-                        <Label htmlFor="email" className="turret-medium text-gray-400 uppercase text-xs tracking-widest">
+                        <Label
+                            htmlFor="email"
+                            className="turret-medium text-gray-400 uppercase text-xs tracking-widest"
+                        >
                             Primary_Identity (Immutable)
                         </Label>
                         <Input
@@ -81,7 +83,10 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
 
                     {/* Username */}
                     <div className="space-y-3 group">
-                        <Label htmlFor="username" className="turret-medium text-white uppercase text-xs tracking-widest group-focus-within:text-terminal-green transition-colors">
+                        <Label
+                            htmlFor="username"
+                            className="turret-medium text-white uppercase text-xs tracking-widest group-focus-within:text-terminal-green transition-colors"
+                        >
                             Alias / Display_Name
                         </Label>
                         <div className="relative">
@@ -95,13 +100,17 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
                             />
                         </div>
                         <p className="text-[10px] text-gray-500 turret-light">
-                            WARNING: Modifying alias may impact leaderboard cache.
+                            WARNING: Modifying alias may impact leaderboard
+                            cache.
                         </p>
                     </div>
 
                     {/* HTB ID */}
                     <div className="space-y-3 group">
-                        <Label htmlFor="htb_id" className="turret-medium text-white uppercase text-xs tracking-widest group-focus-within:text-terminal-green transition-colors">
+                        <Label
+                            htmlFor="htb_id"
+                            className="turret-medium text-white uppercase text-xs tracking-widest group-focus-within:text-terminal-green transition-colors"
+                        >
                             HackTheBox_Linkage
                         </Label>
                         <div className="relative">

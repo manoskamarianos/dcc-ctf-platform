@@ -2,27 +2,31 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import ChallengeForm from "@/app/admin/challenges/create/challenge-form";
 
+// 1. Update the interface: params is now a Promise
 interface PageProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 export default async function EditChallengePage({ params }: PageProps) {
+    // 2. Await the params to get the ID
+    const { id } = await params;
+
     const supabase = await createClient();
 
-    // 1. Verify Admin Access (Double check, though middleware/layout handles it)
+    // 3. Verify Admin Access
     const {
         data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) redirect("/login");
 
-    // 2. Fetch the challenge data
+    // 4. Fetch the challenge data AND the related hints using the unwrapped 'id'
     const { data: challenge, error } = await supabase
         .from("challenges")
-        .select("*")
-        .eq("id", params.id)
+        .select("*, hints(*)")
+        .eq("id", id) // Use the 'id' variable here
         .single();
 
     if (error || !challenge) {

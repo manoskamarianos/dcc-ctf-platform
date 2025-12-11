@@ -24,9 +24,10 @@
     }
 
     /* DARK MODE (The default look for CTF) */
-    .dark, :root { 
+    .dark,
+    :root {
         /* Deep Black Background */
-        --background: 0 0% 0%; 
+        --background: 0 0% 0%;
         --foreground: 120 100% 97%; /* Very light green/white text */
 
         /* Cards - slightly lighter black */

@@ -41,13 +41,15 @@ export default async function AdminChallenges() {
     const getDifficultyColor = (diff: string) => {
         switch (diff.toLowerCase()) {
             case "easy":
-                return "bg-green-500/10 text-green-500 border-green-500/50";
+                return "text-green-400 border-green-500/30 bg-green-500/10";
             case "medium":
-                return "bg-yellow-500/10 text-yellow-500 border-yellow-500/50";
+                return "text-yellow-400 border-yellow-500/30 bg-yellow-500/10";
             case "hard":
-                return "bg-red-500/10 text-red-500 border-red-500/50";
+                return "text-orange-400 border-orange-500/30 bg-orange-500/10";
+            case "insane":
+                return "text-red-500 border-red-600/30 bg-red-600/10";
             default:
-                return "bg-gray-500/10 text-gray-500 border-gray-500/50";
+                return "text-gray-400 border-gray-500/30";
         }
     };
 

@@ -73,26 +73,53 @@ export async function createChallenge(formData: FormData) {
     const category = formData.get("category") as string;
     const difficulty = formData.get("difficulty") as string;
     const points = parseInt(formData.get("points") as string);
-    const flag = formData.get("flag") as string;
+    // We treat the input 'flag' as the template now (e.g. DCC{root_{hash}})
+    const flag_template = formData.get("flag") as string;
     const file_url = formData.get("file_url") as string;
 
+    // Retrieve hints
+    const hints = formData.getAll("hints") as string[];
+
     // Check required fields
-    if (!title || !description || !flag || !points) {
+    if (!title || !description || !flag_template || !points) {
         return { error: "Missing required fields" };
     }
 
-    const { error } = await supabase.from("challenges").insert({
-        title,
-        description,
-        category,
-        difficulty,
-        points,
-        flag,
-        file_url: file_url || null,
-        is_active: true, // Default to active
-    });
+    // 1. Insert Challenge
+    const { data: challenge, error } = await supabase
+        .from("challenges")
+        .insert({
+            title,
+            description,
+            category,
+            difficulty,
+            points,
+            flag_template, // Save as template
+            server_seed: crypto.randomUUID(), // Generate unique seed for this challenge
+            file_url: file_url || null,
+            is_active: true,
+        })
+        .select()
+        .single();
 
     if (error) return { error: error.message };
+
+    // 2. Insert Hints
+    const validHints = hints.filter((h) => h.trim() !== "");
+    if (validHints.length > 0 && challenge) {
+        const hintRows = validHints.map((content) => ({
+            challenge_id: challenge.id,
+            content: content,
+        }));
+
+        const { error: hintError } = await supabase
+            .from("hints")
+            .insert(hintRows);
+
+        if (hintError) {
+            console.error("Error inserting hints:", hintError);
+        }
+    }
 
     revalidatePath("/admin/challenges");
     redirect("/admin/challenges");
@@ -105,22 +132,47 @@ export async function updateChallenge(formData: FormData) {
     const supabase = await createClient();
     const id = formData.get("id") as string;
 
+    const hints = formData.getAll("hints") as string[];
+
     const updates = {
         title: formData.get("title") as string,
         description: formData.get("description") as string,
         category: formData.get("category") as string,
         difficulty: formData.get("difficulty") as string,
         points: parseInt(formData.get("points") as string),
-        flag: formData.get("flag") as string,
+        flag_template: formData.get("flag") as string, // Update template
         file_url: (formData.get("file_url") as string) || null,
     };
 
+    // 1. Update Challenge
     const { error } = await supabase
         .from("challenges")
         .update(updates)
         .eq("id", id);
 
     if (error) return { error: error.message };
+
+    // 2. Update Hints (Delete all -> Insert new)
+    const { error: deleteError } = await supabase
+        .from("hints")
+        .delete()
+        .eq("challenge_id", id);
+
+    if (deleteError) console.error("Error clearing old hints", deleteError);
+
+    const validHints = hints.filter((h) => h.trim() !== "");
+    if (validHints.length > 0) {
+        const hintRows = validHints.map((content) => ({
+            challenge_id: id,
+            content: content,
+        }));
+
+        const { error: insertError } = await supabase
+            .from("hints")
+            .insert(hintRows);
+
+        if (insertError) console.error("Error updating hints", insertError);
+    }
 
     revalidatePath("/admin/challenges");
     redirect("/admin/challenges");

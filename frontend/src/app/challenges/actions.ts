@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { generateUserFlag } from "@/lib/flag-generator";
 
 export async function submitFlag(challengeId: string, flagInput: string) {
     const supabase = await createClient();
@@ -12,10 +13,11 @@ export async function submitFlag(challengeId: string, flagInput: string) {
     } = await supabase.auth.getUser();
     if (!user) return { error: "You must be logged in." };
 
-    // 2. Fetch Challenge Details (specifically the real flag)
+    // 2. Fetch Challenge Details
+    // Note: We select flag_template and server_seed instead of 'flag'
     const { data: challenge, error: challengeError } = await supabase
         .from("challenges")
-        .select("flag, is_active, title")
+        .select("flag_template, server_seed, is_active, title")
         .eq("id", challengeId)
         .single();
 
@@ -39,8 +41,15 @@ export async function submitFlag(challengeId: string, flagInput: string) {
         return { error: "You have already solved this challenge!" };
     }
 
-    // 4. Verify Flag (Trim whitespace and simple string comparison)
-    if (flagInput.trim() === challenge.flag) {
+    // 4. Generate the EXPECTED flag for THIS specific user
+    const expectedFlag = generateUserFlag(
+        challenge.flag_template,
+        challenge.server_seed,
+        user.id,
+    );
+
+    // 5. Verify Flag
+    if (flagInput.trim() === expectedFlag) {
         // Correct! Insert solve
         const { error: solveError } = await supabase.from("solves").insert({
             user_id: user.id,

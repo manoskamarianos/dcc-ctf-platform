@@ -18,8 +18,8 @@ export const dynamic = "force-dynamic";
 export default async function LeaderboardPage() {
     const supabase = await createClient();
 
-    // Assumption: You have a view or logic to get this data. 
-    // If you haven't created the view yet, this might return null/error, 
+    // Assumption: You have a view or logic to get this data.
+    // If you haven't created the view yet, this might return null/error,
     // but the UI will handle the empty state.
     const { data: leaderboard } = await supabase
         .from("leaderboard_view")
@@ -27,23 +27,38 @@ export default async function LeaderboardPage() {
         .limit(50);
 
     const getRankIcon = (index: number) => {
-        if (index === 0) return <Crown className="h-6 w-6 text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" />;
-        if (index === 1) return <Medal className="h-6 w-6 text-gray-300 drop-shadow-[0_0_5px_rgba(209,213,219,0.5)]" />;
-        if (index === 2) return <Medal className="h-6 w-6 text-amber-700 drop-shadow-[0_0_5px_rgba(180,83,9,0.5)]" />;
-        return <span className="font-mono text-gray-600 text-lg">#{index + 1}</span>;
+        if (index === 0)
+            return (
+                <Crown className="h-6 w-6 text-yellow-400 animate-pulse drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" />
+            );
+        if (index === 1)
+            return (
+                <Medal className="h-6 w-6 text-gray-300 drop-shadow-[0_0_5px_rgba(209,213,219,0.5)]" />
+            );
+        if (index === 2)
+            return (
+                <Medal className="h-6 w-6 text-amber-700 drop-shadow-[0_0_5px_rgba(180,83,9,0.5)]" />
+            );
+        return (
+            <span className="font-mono text-gray-600 text-lg">
+                #{index + 1}
+            </span>
+        );
     };
 
     const getRankRowStyle = (index: number) => {
-        if (index === 0) return "bg-yellow-900/10 hover:bg-yellow-900/20 border-l-2 border-l-yellow-500";
-        if (index === 1) return "bg-gray-900/10 hover:bg-gray-900/20 border-l-2 border-l-gray-400";
-        if (index === 2) return "bg-orange-900/10 hover:bg-orange-900/20 border-l-2 border-l-amber-700";
+        if (index === 0)
+            return "bg-yellow-900/10 hover:bg-yellow-900/20 border-l-2 border-l-yellow-500";
+        if (index === 1)
+            return "bg-gray-900/10 hover:bg-gray-900/20 border-l-2 border-l-gray-400";
+        if (index === 2)
+            return "bg-orange-900/10 hover:bg-orange-900/20 border-l-2 border-l-amber-700";
         return "hover:bg-terminal-green/5 border-l-2 border-l-transparent hover:border-l-terminal-green transition-all";
     };
 
     return (
         <main className="min-h-[calc(100vh-60px)] bg-black bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
             <div className="container mx-auto py-8 px-4 md:px-6 space-y-8">
-                
                 {/* Header */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-gray-800 pb-6">
                     <div className="flex items-center gap-3">
@@ -61,7 +76,9 @@ export default async function LeaderboardPage() {
                     </div>
                     <div className="flex items-center gap-2 bg-gray-900/50 px-4 py-2 rounded border border-gray-800">
                         <Activity className="h-4 w-4 text-terminal-green animate-pulse" />
-                        <span className="font-mono text-xs text-gray-400">LIVE_FEED</span>
+                        <span className="font-mono text-xs text-gray-400">
+                            LIVE_FEED
+                        </span>
                     </div>
                 </div>
 
@@ -94,7 +111,10 @@ export default async function LeaderboardPage() {
                                 {/* Empty State Handling */}
                                 {(!leaderboard || leaderboard.length === 0) && (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="h-32 text-center text-gray-500 font-mono">
+                                        <TableCell
+                                            colSpan={4}
+                                            className="h-32 text-center text-gray-500 font-mono"
+                                        >
                                             // DATABASE_CONNECTION_PENDING...
                                         </TableCell>
                                     </TableRow>
@@ -112,11 +132,16 @@ export default async function LeaderboardPage() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex flex-col">
-                                                <span className={`turret-bold text-lg ${index === 0 ? 'text-yellow-400' : 'text-white'}`}>
+                                                <span
+                                                    className={`turret-bold text-lg ${index === 0 ? "text-yellow-400" : "text-white"}`}
+                                                >
                                                     {user.username}
                                                 </span>
                                                 {index < 3 && (
-                                                    <Badge variant="outline" className="w-fit mt-1 border-gray-800 text-[10px] text-gray-500 font-mono">
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="w-fit mt-1 border-gray-800 text-[10px] text-gray-500 font-mono"
+                                                    >
                                                         ELITE_TIER
                                                     </Badge>
                                                 )}
@@ -129,7 +154,9 @@ export default async function LeaderboardPage() {
                                             <span className="font-mono text-terminal-green text-xl font-bold tracking-tight">
                                                 {user.total_points || 0}
                                             </span>
-                                            <span className="text-xs text-gray-600 ml-1">PTS</span>
+                                            <span className="text-xs text-gray-600 ml-1">
+                                                PTS
+                                            </span>
                                         </TableCell>
                                     </TableRow>
                                 ))}

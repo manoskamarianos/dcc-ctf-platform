@@ -39,9 +39,7 @@ export default function Register() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-black bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] p-4">
-            
             <Card className="w-full max-w-md bg-black/80 backdrop-blur-md border border-terminal-green/30 text-white shadow-[0_0_30px_rgba(34,197,94,0.15)] relative overflow-hidden">
-                
                 {/* Decorative Top Bar */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-terminal-green/50"></div>
 
@@ -67,7 +65,10 @@ export default function Register() {
                     <form action={handleSubmit} className="space-y-5">
                         {/* Username Field */}
                         <div className="space-y-2 group">
-                            <Label htmlFor="username" className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors">
+                            <Label
+                                htmlFor="username"
+                                className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors"
+                            >
                                 ALIAS (USERNAME)
                             </Label>
                             <div className="relative">
@@ -87,7 +88,10 @@ export default function Register() {
 
                         {/* Email Field */}
                         <div className="space-y-2 group">
-                            <Label htmlFor="email" className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors">
+                            <Label
+                                htmlFor="email"
+                                className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors"
+                            >
                                 COMMUNICATION_LINK (EMAIL)
                             </Label>
                             <div className="relative">
@@ -106,7 +110,10 @@ export default function Register() {
 
                         {/* Password Field */}
                         <div className="space-y-2 group">
-                            <Label htmlFor="password" className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors">
+                            <Label
+                                htmlFor="password"
+                                className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors"
+                            >
                                 SECRET_KEY (PASSWORD)
                             </Label>
                             <div className="relative">

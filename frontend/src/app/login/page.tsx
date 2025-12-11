@@ -15,7 +15,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Lock, Mail, AlertCircle, KeyRound, Terminal } from "lucide-react";
+import {
+    Shield,
+    Lock,
+    Mail,
+    AlertCircle,
+    KeyRound,
+    Terminal,
+} from "lucide-react";
 import { login } from "@/app/auth/actions";
 
 export default function Login() {
@@ -39,12 +46,10 @@ export default function Login() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-black bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] p-4">
-            
             <Card className="w-full max-w-md bg-black/80 backdrop-blur-md border border-terminal-green/30 text-white shadow-[0_0_30px_rgba(34,197,94,0.15)] relative overflow-hidden">
-                
                 {/* Decorative Top Bar */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-terminal-green/50"></div>
-                
+
                 <CardHeader className="space-y-2 pb-6">
                     <div className="flex items-center justify-center mb-4">
                         <div className="relative group">
@@ -67,7 +72,10 @@ export default function Login() {
                     <form action={handleSubmit} className="space-y-6">
                         {/* Email Field */}
                         <div className="space-y-2 group">
-                            <Label htmlFor="email" className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors">
+                            <Label
+                                htmlFor="email"
+                                className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors"
+                            >
                                 IDENTITY_STRING (EMAIL)
                             </Label>
                             <div className="relative">
@@ -87,7 +95,10 @@ export default function Login() {
                         {/* Password Field */}
                         <div className="space-y-2 group">
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="password" className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors">
+                                <Label
+                                    htmlFor="password"
+                                    className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors"
+                                >
                                     ACCESS_KEY (PASSWORD)
                                 </Label>
                             </div>
@@ -139,7 +150,7 @@ export default function Login() {
                         </div>
                     </div>
                 </CardContent>
-                
+
                 <CardFooter className="flex justify-center pb-8">
                     <p className="text-sm text-gray-500 turret-light">
                         No clearance level?{" "}
