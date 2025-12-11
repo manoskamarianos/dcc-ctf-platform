@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Lock, Mail, AlertCircle, KeyRound } from "lucide-react";
+import { Shield, Lock, Mail, AlertCircle, KeyRound, Terminal } from "lucide-react";
 import { login } from "@/app/auth/actions";
 
 export default function Login() {
@@ -33,41 +33,51 @@ export default function Login() {
             setError(result.error);
             setLoading(false);
         } else {
-            // Redirect is handled by the server action
-            // We refresh just to ensure client cache is updated immediately
             router.refresh();
         }
     };
 
     return (
-        <div className="container flex items-center justify-center min-h-screen py-10">
-            <Card className="w-full max-w-md border-terminal-green/50 bg-black text-terminal-green shadow-[0_0_20px_rgba(0,255,0,0.1)]">
-                <CardHeader className="space-y-1">
+        <div className="min-h-screen flex items-center justify-center bg-black bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] p-4">
+            
+            <Card className="w-full max-w-md bg-black/80 backdrop-blur-md border border-terminal-green/30 text-white shadow-[0_0_30px_rgba(34,197,94,0.15)] relative overflow-hidden">
+                
+                {/* Decorative Top Bar */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-terminal-green/50"></div>
+                
+                <CardHeader className="space-y-2 pb-6">
                     <div className="flex items-center justify-center mb-4">
-                        <div className="p-3 rounded-full bg-terminal-green/10 ring-1 ring-terminal-green/50">
-                            <Shield className="h-8 w-8 text-terminal-green" />
+                        <div className="relative group">
+                            <div className="absolute -inset-1 bg-terminal-green/20 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-200"></div>
+                            <div className="relative p-4 rounded-full bg-black border border-terminal-green/50 ring-1 ring-terminal-green/20">
+                                <Shield className="h-8 w-8 text-terminal-green" />
+                            </div>
                         </div>
                     </div>
-                    <CardTitle className="text-2xl font-bold text-center tracking-wider font-mono">
-                        AUTHENTICATE
+                    <CardTitle className="text-3xl text-center tracking-wider turret-extrabold text-white uppercase">
+                        System_Access
                     </CardTitle>
-                    <CardDescription className="text-center text-gray-400 font-mono text-xs">
-                        Enter credentials to bypass firewall
+                    <CardDescription className="text-center text-gray-400 turret-light flex items-center justify-center gap-2">
+                        <Terminal className="w-3 h-3" />
+                        <span>Enter credentials to bypass firewall</span>
                     </CardDescription>
                 </CardHeader>
+
                 <CardContent>
-                    <form action={handleSubmit} className="space-y-4">
+                    <form action={handleSubmit} className="space-y-6">
                         {/* Email Field */}
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                        <div className="space-y-2 group">
+                            <Label htmlFor="email" className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors">
+                                IDENTITY_STRING (EMAIL)
+                            </Label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500 group-focus-within:text-terminal-green transition-colors" />
                                 <Input
                                     id="email"
                                     name="email"
                                     type="email"
-                                    placeholder="hacker@example.com"
-                                    className="pl-10 bg-gray-900 border-gray-700 text-white focus:ring-terminal-green focus:border-terminal-green"
+                                    placeholder="operative@mainframe.com"
+                                    className="pl-10 bg-gray-950/50 border-gray-800 text-white font-mono placeholder:text-gray-700 focus:border-terminal-green focus:ring-1 focus:ring-terminal-green/50 transition-all"
                                     required
                                     autoComplete="email"
                                 />
@@ -75,18 +85,20 @@ export default function Login() {
                         </div>
 
                         {/* Password Field */}
-                        <div className="space-y-2">
+                        <div className="space-y-2 group">
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="password">Password</Label>
+                                <Label htmlFor="password" className="turret-medium text-gray-300 group-focus-within:text-terminal-green transition-colors">
+                                    ACCESS_KEY (PASSWORD)
+                                </Label>
                             </div>
                             <div className="relative">
-                                <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-500 group-focus-within:text-terminal-green transition-colors" />
                                 <Input
                                     id="password"
                                     name="password"
                                     type="password"
                                     placeholder="••••••••"
-                                    className="pl-10 bg-gray-900 border-gray-700 text-white focus:ring-terminal-green focus:border-terminal-green"
+                                    className="pl-10 bg-gray-950/50 border-gray-800 text-white font-mono placeholder:text-gray-700 focus:border-terminal-green focus:ring-1 focus:ring-terminal-green/50 transition-all"
                                     required
                                     autoComplete="current-password"
                                 />
@@ -94,46 +106,48 @@ export default function Login() {
                         </div>
 
                         {error && (
-                            <div className="flex items-center gap-2 text-red-500 text-sm font-mono bg-red-900/20 p-3 rounded border border-red-900/50 animate-in fade-in slide-in-from-top-1">
-                                <AlertCircle className="h-4 w-4" />
-                                <span>Error: {error}</span>
+                            <div className="flex items-center gap-3 text-red-400 text-sm bg-red-950/30 p-3 rounded border border-red-900/50 animate-in fade-in slide-in-from-top-1">
+                                <AlertCircle className="h-5 w-5 shrink-0" />
+                                <span className="font-mono">{error}</span>
                             </div>
                         )}
 
                         <Button
                             type="submit"
-                            className="w-full bg-terminal-green text-black hover:bg-terminal-green/80 font-bold transition-all"
+                            className="w-full bg-terminal-green text-black hover:bg-terminal-green/90 turret-bold tracking-widest uppercase h-11 border border-transparent hover:shadow-[0_0_15px_rgba(34,197,94,0.4)] transition-all"
                             disabled={loading}
                         >
                             {loading ? (
-                                <span className="animate-pulse">
-                                    ACCESSING MAINFRAME...
+                                <span className="flex items-center gap-2 font-mono animate-pulse">
+                                    <span className="w-2 h-2 bg-black rounded-full animate-bounce"></span>
+                                    AUTHENTICATING...
                                 </span>
                             ) : (
-                                "INITIATE LOGIN"
+                                "INITIATE_LOGIN_SEQUENCE"
                             )}
                         </Button>
                     </form>
 
-                    <div className="relative my-6">
+                    <div className="relative my-8">
                         <div className="absolute inset-0 flex items-center">
                             <Separator className="w-full bg-gray-800" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-black px-2 text-gray-500 font-mono">
-                                OR
+                            <span className="bg-black px-2 text-gray-600 turret-medium tracking-widest border border-gray-800 rounded">
+                                ALTERNATE_ROUTE
                             </span>
                         </div>
                     </div>
                 </CardContent>
-                <CardFooter className="flex justify-center">
-                    <p className="text-sm text-gray-400 font-mono">
-                        No access clearance?{" "}
+                
+                <CardFooter className="flex justify-center pb-8">
+                    <p className="text-sm text-gray-500 turret-light">
+                        No clearance level?{" "}
                         <Link
                             href="/register"
-                            className="text-terminal-green hover:underline decoration-dashed underline-offset-4"
+                            className="text-terminal-green hover:text-white hover:underline decoration-dashed underline-offset-4 transition-colors"
                         >
-                            Register
+                            Request Access
                         </Link>
                     </p>
                 </CardFooter>

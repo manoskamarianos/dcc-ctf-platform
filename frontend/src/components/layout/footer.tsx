@@ -73,27 +73,12 @@ export default function Footer() {
                                 asChild
                             >
                                 <Link
-                                    href="https://github.com"
+                                    href="https://github.com/manoskamarianos/dcc-ctf-platform"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
                                     <Github size={20} />
                                     <span className="sr-only">GitHub</span>
-                                </Link>
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-gray-400 hover:text-terminal-green hover:bg-gray-900"
-                                asChild
-                            >
-                                <Link
-                                    href="https://twitter.com"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <Twitter size={20} />
-                                    <span className="sr-only">Twitter</span>
                                 </Link>
                             </Button>
                             <Button
