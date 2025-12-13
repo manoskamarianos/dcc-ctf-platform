@@ -17,8 +17,10 @@ import {
     ShieldAlert,
     Trash2,
     Loader2,
+    RefreshCw, // Added Refresh Icon
 } from "lucide-react";
 import { toggleUserRole, deleteUser } from "@/app/admin/actions";
+import { syncTargetUserProgress } from "./sync-actions"; // Import the new sync action
 
 interface UserActionsProps {
     userId: string;
@@ -48,11 +50,32 @@ export default function UserActions({
         setLoading(false);
     };
 
+    const handleSyncProgress = async () => {
+        if (loading) return;
+
+        // Optional confirmation
+        const confirmed = window.confirm(
+            `Sync HTB progress for user "${username}"? This will check for new solves on HackTheBox.`
+        );
+        if (!confirmed) return;
+
+        setLoading(true);
+        const result = await syncTargetUserProgress(userId);
+
+        if (result.error) {
+            alert(`Sync Failed: ${result.error}`);
+        } else {
+            alert(result.message); // Show success message with stats
+            router.refresh(); // Update the UI (points/solves might change)
+        }
+        setLoading(false);
+    };
+
     const handleDelete = async () => {
         if (loading) return;
 
         const confirmed = window.confirm(
-            `Are you sure you want to delete user "${username}"? This action cannot be undone.`,
+            `Are you sure you want to delete user "${username}"? This action cannot be undone.`
         );
 
         if (!confirmed) return;
@@ -88,6 +111,17 @@ export default function UserActions({
                 className="bg-gray-900 border-gray-800 text-white"
             >
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-800" />
+
+                {/* New Sync Action */}
+                <DropdownMenuItem
+                    onClick={handleSyncProgress}
+                    className="cursor-pointer hover:bg-gray-800 focus:bg-gray-800 focus:text-white"
+                >
+                    <RefreshCw className="mr-2 h-4 w-4 text-purple-400" />
+                    <span>Sync HTB Progress</span>
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator className="bg-gray-800" />
 
                 <DropdownMenuItem

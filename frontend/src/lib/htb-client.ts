@@ -25,6 +25,22 @@ export interface HtbMachine {
     is_completed?: boolean;
 }
 
+export interface HtbUserChallengeProgress {
+    id: number;
+    name: string;
+    points: number;
+    difficulty: string;
+    challenge_category: number;
+}
+
+export interface HtbUserMachineProgress {
+    id: number;
+    name: string;
+    os: string;
+    points: number;
+    avatar: string;
+}
+
 // Helper interface for Category Mapping
 interface HtbCategory {
     id: number;
@@ -144,6 +160,72 @@ export async function getChallengeDetail(
         }
     }
     return null;
+}
+
+/**
+ * Fetch the list of CHALLENGES solved by a specific HTB User.
+ * UPDATED: Uses the /user/profile/progress endpoint.
+ */
+export async function getUserChallengeProgress(
+    token: string,
+    htbUserId: string | number
+): Promise<HtbUserChallengeProgress[]> {
+    try {
+        const url = `${HTB_API_URL}/user/profile/progress/challenges/${htbUserId}`;
+        console.log(`Fetching Challenges for user ${htbUserId}...`); // Debug Log
+
+        const res = await fetch(url, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "User-Agent": "DCC-CTF-Platform/1.0",
+            },
+            cache: "no-store",
+        });
+
+        if (!res.ok) {
+            console.warn(`Failed to fetch user challenges (Status: ${res.status}). URL: ${url}`);
+            return [];
+        }
+
+        const data = await res.json();
+        return data.challenges || [];
+    } catch (error) {
+        console.error("Error fetching user challenge progress:", error);
+        return [];
+    }
+}
+
+/**
+ * Fetch the list of MACHINES owned by a specific HTB User.
+ * UPDATED: Uses the /user/profile/progress endpoint.
+ */
+export async function getUserMachineProgress(
+    token: string,
+    htbUserId: string | number
+): Promise<HtbUserMachineProgress[]> {
+    try {
+        const url = `${HTB_API_URL}/user/profile/activity/${htbUserId}`;
+        console.log(`Fetching Machines for user ${htbUserId}...`); // Debug Log
+
+        const res = await fetch(url, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "User-Agent": "DCC-CTF-Platform/1.0",
+            },
+            cache: "no-store",
+        });
+
+        if (!res.ok) {
+             console.warn(`Failed to fetch user machines (Status: ${res.status}). URL: ${url}`);
+            return [];
+        }
+
+        const data = await res.json();
+        return data.machines || [];
+    } catch (error) {
+        console.error("Error fetching user machine progress:", error);
+        return [];
+    }
 }
 
 /**
