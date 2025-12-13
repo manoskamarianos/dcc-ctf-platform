@@ -63,7 +63,8 @@ export async function syncHtbMachines() {
         );
 
         if (!error) count++;
-        else console.error(`Failed to sync machine ${m.name}: ${error.message}`);
+        else
+            console.error(`Failed to sync machine ${m.name}: ${error.message}`);
     }
 
     revalidatePath("/admin/machines");

@@ -161,21 +161,24 @@ export async function getActiveMachines(token: string): Promise<HtbMachine[]> {
         try {
             // Using API v5
             const url = `${HTB_API_V5_URL}/machines/?page=${page}`;
-            
+
             const res = await fetch(url, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     // Browser User-Agent to help avoid 403s
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+                    "User-Agent":
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
                     "Content-Type": "application/json",
-                    "Accept": "application/json"
+                    Accept: "application/json",
                 },
                 cache: "no-store",
             });
 
             // Handle 429 specifically by waiting and retrying the SAME page
             if (res.status === 429) {
-                console.warn(`Hit Rate Limit (429) on page ${page}. Cooling down for 60 seconds before retrying...`);
+                console.warn(
+                    `Hit Rate Limit (429) on page ${page}. Cooling down for 60 seconds before retrying...`,
+                );
                 await delay(60000); // Wait 1 minute if we actually hit the limit
                 continue; // Retry the same loop iteration (same page)
             }
@@ -186,11 +189,11 @@ export async function getActiveMachines(token: string): Promise<HtbMachine[]> {
                     res.status,
                     await res.text(),
                 );
-                break; 
+                break;
             }
 
             const responseJson = await res.json();
-            
+
             // v5 Structure: List is in 'data', Count is in 'meta.total'
             const rawList = responseJson.data || [];
             const totalRecords = responseJson.meta?.total || 0;
@@ -212,23 +215,24 @@ export async function getActiveMachines(token: string): Promise<HtbMachine[]> {
                 root_owns_count: m.rootOwnsCount, // Map rootOwnsCount -> root_owns_count
                 free: m.free,
                 maker: m.firstCreator, // Map firstCreator -> maker
-                avatar: m.avatar, 
+                avatar: m.avatar,
                 difficulty_text: m.difficultyText || "Medium",
             }));
 
             allMachines.push(...mappedMachines);
-            console.log(`Fetched page ${page}: ${mappedMachines.length} machines. Total so far: ${allMachines.length}`);
+            console.log(
+                `Fetched page ${page}: ${mappedMachines.length} machines. Total so far: ${allMachines.length}`,
+            );
 
             if (totalRecords > 0 && allMachines.length >= totalRecords) {
                 hasNextPage = false;
             } else {
                 page++;
-                
+
                 // --- 30 SECOND DELAY ---
                 console.log("Waiting 10 seconds to respect rate limits...");
-                await delay(10000); 
+                await delay(10000);
             }
-
         } catch (error) {
             console.error("HTB API Error (Machines Loop):", error);
             hasNextPage = false;

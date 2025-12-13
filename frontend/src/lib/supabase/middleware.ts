@@ -24,12 +24,12 @@ export async function updateSession(request: NextRequest) {
                     cookiesToSet.forEach(({ name, value, options }) =>
                         request.cookies.set(name, value),
                     );
-                    
+
                     // Re-create the response object with the updated request
                     response = NextResponse.next({
                         request,
                     });
-                    
+
                     // Set the cookies on the response object
                     cookiesToSet.forEach(({ name, value, options }) =>
                         response.cookies.set(name, value, options),
@@ -74,15 +74,15 @@ export async function updateSession(request: NextRequest) {
     if (!user && isProtectedPath) {
         const url = request.nextUrl.clone();
         url.pathname = "/login";
-        
+
         const redirectResponse = NextResponse.redirect(url);
-        
+
         // COPY COOKIES from the Supabase-updated response to the redirect response
         const allCookies = response.cookies.getAll();
         allCookies.forEach((c) => {
             redirectResponse.cookies.set(c.name, c.value, c);
         });
-        
+
         return redirectResponse;
     }
 
@@ -90,9 +90,9 @@ export async function updateSession(request: NextRequest) {
     if (user && isAuthPath) {
         const url = request.nextUrl.clone();
         url.pathname = "/home";
-        
+
         const redirectResponse = NextResponse.redirect(url);
-        
+
         // COPY COOKIES
         const allCookies = response.cookies.getAll();
         allCookies.forEach((c) => {
@@ -110,9 +110,9 @@ export async function updateSession(request: NextRequest) {
         } else {
             url.pathname = "/login";
         }
-        
+
         const redirectResponse = NextResponse.redirect(url);
-        
+
         // COPY COOKIES
         const allCookies = response.cookies.getAll();
         allCookies.forEach((c) => {
