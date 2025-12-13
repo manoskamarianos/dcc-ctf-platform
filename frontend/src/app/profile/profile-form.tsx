@@ -21,6 +21,9 @@ import {
     AlertCircle,
     CheckCircle,
     Settings,
+    Key,
+    Eye,
+    EyeOff,
 } from "lucide-react";
 
 interface ProfileFormProps {
@@ -28,11 +31,13 @@ interface ProfileFormProps {
     profile: {
         username: string;
         htb_id: string | null;
+        htb_token?: string | null; // <--- NEW field
     } | null;
 }
 
 export default function ProfileForm({ user, profile }: ProfileFormProps) {
     const [loading, setLoading] = useState(false);
+    const [showToken, setShowToken] = useState(false); // <--- State to toggle visibility
     const [message, setMessage] = useState<{
         type: "success" | "error";
         text: string;
@@ -111,7 +116,7 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
                             htmlFor="htb_id"
                             className="turret-medium text-white uppercase text-xs tracking-widest group-focus-within:text-terminal-green transition-colors"
                         >
-                            HackTheBox_Linkage
+                            HackTheBox User ID
                         </Label>
                         <div className="relative">
                             <Hash className="absolute left-3 top-3 h-4 w-4 text-gray-500 group-focus-within:text-terminal-green transition-colors" />
@@ -119,12 +124,45 @@ export default function ProfileForm({ user, profile }: ProfileFormProps) {
                                 id="htb_id"
                                 name="htb_id"
                                 defaultValue={profile?.htb_id || ""}
-                                placeholder="Enter HTB ID"
+                                placeholder="e.g. 123456"
                                 className="pl-10 bg-gray-950/50 border-gray-800 text-white font-mono focus:border-terminal-green focus:ring-1 focus:ring-terminal-green/50 placeholder:text-gray-700 transition-all"
                             />
                         </div>
+                    </div>
+
+                    {/* HTB API Token */}
+                    <div className="space-y-3 group">
+                        <Label
+                            htmlFor="htb_token"
+                            className="turret-medium text-white uppercase text-xs tracking-widest group-focus-within:text-terminal-green transition-colors"
+                        >
+                            HTB API Token
+                        </Label>
+                        <div className="relative">
+                            <Key className="absolute left-3 top-3 h-4 w-4 text-gray-500 group-focus-within:text-terminal-green transition-colors" />
+                            <Input
+                                id="htb_token"
+                                name="htb_token"
+                                type={showToken ? "text" : "password"}
+                                defaultValue={profile?.htb_token || ""}
+                                placeholder="eyJ..."
+                                className="pl-10 pr-10 bg-gray-950/50 border-gray-800 text-white font-mono focus:border-terminal-green focus:ring-1 focus:ring-terminal-green/50 placeholder:text-gray-700 transition-all"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowToken(!showToken)}
+                                className="absolute right-3 top-3 text-gray-500 hover:text-white transition-colors"
+                            >
+                                {showToken ? (
+                                    <EyeOff className="h-4 w-4" />
+                                ) : (
+                                    <Eye className="h-4 w-4" />
+                                )}
+                            </button>
+                        </div>
                         <p className="text-[10px] text-gray-500 turret-light">
-                            Optional: Integrate external verification protocols.
+                            Required for auto-submitting flags to HackTheBox.
+                            Stored securely.
                         </p>
                     </div>
 

@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Flag, Target, Trophy, Activity, Server } from "lucide-react";
+import {
+    Users,
+    Flag,
+    Target,
+    Trophy,
+    Activity,
+    Server,
+    Cpu,
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 export default async function AdminDashboard() {
@@ -10,21 +18,29 @@ export default async function AdminDashboard() {
     const [
         { count: userCount },
         { count: challengeCount },
-        { count: solvesCount },
+        { count: machineCount },
+        { count: challengeSolves },
+        { count: machineSolves },
         { count: contestCount },
         { data: recentUsers },
     ] = await Promise.all([
         supabase.from("users").select("*", { count: "exact", head: true }),
         supabase.from("challenges").select("*", { count: "exact", head: true }),
+        supabase.from("machines").select("*", { count: "exact", head: true }), // <--- New
         supabase.from("solves").select("*", { count: "exact", head: true }),
+        supabase
+            .from("machine_solves")
+            .select("*", { count: "exact", head: true }), // <--- New
         supabase.from("contests").select("*", { count: "exact", head: true }),
-        // Fetch last 5 users for the 'Recent Activity' feed
+        // Fetch last 5 users
         supabase
             .from("users")
             .select("username, created_at")
             .order("created_at", { ascending: false })
             .limit(5),
     ]);
+
+    const totalSolves = (challengeSolves || 0) + (machineSolves || 0);
 
     return (
         <div className="space-y-8">
@@ -47,7 +63,7 @@ export default async function AdminDashboard() {
                 <Card className="bg-gray-950 border-gray-800 shadow-sm hover:border-blue-500/50 transition-colors">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-gray-400 font-mono">
-                            REGISTERED_OPERATIVES
+                            OPERATIVES
                         </CardTitle>
                         <Users className="h-4 w-4 text-blue-500" />
                     </CardHeader>
@@ -56,43 +72,55 @@ export default async function AdminDashboard() {
                             {userCount || 0}
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                            Total active accounts
+                            Registered Users
                         </p>
                     </CardContent>
                 </Card>
 
-                {/* Challenges Count */}
+                {/* Challenges & Machines Count */}
                 <Card className="bg-gray-950 border-gray-800 shadow-sm hover:border-terminal-green/50 transition-colors">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-gray-400 font-mono">
-                            DEPLOYED_CHALLENGES
+                            INFRASTRUCTURE
                         </CardTitle>
-                        <Flag className="h-4 w-4 text-terminal-green" />
+                        <Server className="h-4 w-4 text-terminal-green" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-white font-mono">
-                            {challengeCount || 0}
+                        <div className="flex items-baseline gap-2">
+                            <div className="text-2xl font-bold text-white font-mono">
+                                {challengeCount || 0}
+                            </div>
+                            <span className="text-xs text-gray-500">
+                                Challs
+                            </span>
+                            <span className="text-gray-700">/</span>
+                            <div className="text-2xl font-bold text-white font-mono">
+                                {machineCount || 0}
+                            </div>
+                            <span className="text-xs text-gray-500">
+                                Machines
+                            </span>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                            Available across categories
+                            Deployed Assets
                         </p>
                     </CardContent>
                 </Card>
 
-                {/* Solves Count */}
+                {/* Total Solves */}
                 <Card className="bg-gray-950 border-gray-800 shadow-sm hover:border-yellow-500/50 transition-colors">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-gray-400 font-mono">
-                            TOTAL_FLAGS_CAPTURED
+                            TOTAL_PWNS
                         </CardTitle>
                         <Target className="h-4 w-4 text-yellow-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-white font-mono">
-                            {solvesCount || 0}
+                            {totalSolves}
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                            Successful submissions
+                            Flags Captured (All Types)
                         </p>
                     </CardContent>
                 </Card>
@@ -101,7 +129,7 @@ export default async function AdminDashboard() {
                 <Card className="bg-gray-950 border-gray-800 shadow-sm hover:border-purple-500/50 transition-colors">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-gray-400 font-mono">
-                            ACTIVE_CAMPAIGNS
+                            CAMPAIGNS
                         </CardTitle>
                         <Trophy className="h-4 w-4 text-purple-500" />
                     </CardHeader>
@@ -110,7 +138,7 @@ export default async function AdminDashboard() {
                             {contestCount || 0}
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                            Scheduled events
+                            Scheduled Events
                         </p>
                     </CardContent>
                 </Card>
@@ -121,7 +149,7 @@ export default async function AdminDashboard() {
                 <Card className="bg-gray-950 border-gray-800">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 font-mono text-lg">
-                            <Server className="h-5 w-5 text-gray-400" />
+                            <Cpu className="h-5 w-5 text-gray-400" />
                             SERVER_STATUS
                         </CardTitle>
                     </CardHeader>
@@ -141,9 +169,17 @@ export default async function AdminDashboard() {
                             </span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-400">Region</span>
-                            <span className="text-white font-mono">
-                                eu-central-1
+                            <span className="text-gray-400">HTB Sync</span>
+                            <span
+                                className={
+                                    process.env.HTB_SYSTEM_TOKEN
+                                        ? "text-green-400 font-mono"
+                                        : "text-red-400 font-mono"
+                                }
+                            >
+                                {process.env.HTB_SYSTEM_TOKEN
+                                    ? "CONFIGURED"
+                                    : "TOKEN_MISSING"}
                             </span>
                         </div>
                     </CardContent>

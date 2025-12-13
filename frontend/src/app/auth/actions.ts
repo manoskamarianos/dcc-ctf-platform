@@ -93,6 +93,7 @@ export async function updateProfile(formData: FormData) {
 
     const username = formData.get("username") as string;
     const htb_id = formData.get("htb_id") as string;
+    const htb_token = formData.get("htb_token") as string; // <--- NEW: Get Token
 
     if (!username || username.trim().length < 3) {
         return { error: "Username must be at least 3 characters long." };
@@ -103,7 +104,8 @@ export async function updateProfile(formData: FormData) {
         .from("users")
         .update({
             username: username,
-            htb_id: htb_id || null, // Convert empty string to null
+            htb_id: htb_id || null,
+            htb_token: htb_token || null,
         })
         .eq("id", user.id);
 

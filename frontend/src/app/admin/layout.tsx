@@ -8,6 +8,7 @@ import {
     Trophy,
     LogOut,
     ShieldAlert,
+    Computer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -55,6 +56,11 @@ export default async function AdminLayout({
             href: "/admin/challenges",
             label: "Challenges",
             icon: <Flag size={20} />,
+        },
+        {
+            href: "/admin/machines",
+            label: "Machines",
+            icon: <Computer size={20} />,
         },
         {
             href: "/admin/contests",

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { generateUserFlag } from "@/lib/flag-generator";
+import { submitHtbFlag } from "@/lib/htb-client";
 
 export async function submitFlag(challengeId: string, flagInput: string) {
     const supabase = await createClient();
@@ -14,10 +15,10 @@ export async function submitFlag(challengeId: string, flagInput: string) {
     if (!user) return { error: "You must be logged in." };
 
     // 2. Fetch Challenge Details
-    // Note: We select flag_template and server_seed instead of 'flag'
+    // Include 'htb_id' to check source
     const { data: challenge, error: challengeError } = await supabase
         .from("challenges")
-        .select("flag_template, server_seed, is_active, title")
+        .select("flag_template, server_seed, is_active, title, htb_id")
         .eq("id", challengeId)
         .single();
 
@@ -41,32 +42,82 @@ export async function submitFlag(challengeId: string, flagInput: string) {
         return { error: "You have already solved this challenge!" };
     }
 
-    // 4. Generate the EXPECTED flag for THIS specific user
-    const expectedFlag = generateUserFlag(
-        challenge.flag_template,
-        challenge.server_seed,
-        user.id,
-    );
+    // 4. Logic Branch: HTB vs Local
+    if (challenge.htb_id) {
+        // --- HTB LOGIC ---
+        // Get user profile for token
+        const { data: profile } = await supabase
+            .from("users")
+            .select("htb_token")
+            .eq("id", user.id)
+            .single();
 
-    // 5. Verify Flag
-    if (flagInput.trim() === expectedFlag) {
-        // Correct! Insert solve
+        if (!profile?.htb_token) {
+            return {
+                error: "HTB API Token missing. Please configure it in your Profile.",
+            };
+        }
+
+        // Forward submission to HackTheBox
+        const htbResult = await submitHtbFlag(
+            profile.htb_token,
+            challenge.htb_id,
+            flagInput,
+            "challenge",
+        );
+
+        if (!htbResult.success) {
+            return {
+                error: `HTB Rejected: ${htbResult.message || "Invalid flag"}`,
+            };
+        }
+
+        // Success -> Record locally
         const { error: solveError } = await supabase.from("solves").insert({
             user_id: user.id,
             challenge_id: challengeId,
         });
 
         if (solveError) {
-            return { error: "Database error recording solve." };
+            return {
+                error: "Flag accepted by HTB, but failed to record local solve.",
+            };
         }
 
         revalidatePath("/challenges");
         revalidatePath("/leaderboard");
         return {
             success: true,
-            message: `Correct! You solved ${challenge.title}.`,
+            message: `Correct! You pwned ${challenge.title} on HTB.`,
         };
     } else {
-        return { error: "Incorrect flag. Try again." };
+        // --- LOCAL LOGIC ---
+        // Generate the EXPECTED flag for THIS specific user
+        const expectedFlag = generateUserFlag(
+            challenge.flag_template,
+            challenge.server_seed,
+            user.id,
+        );
+
+        // Verify Flag
+        if (flagInput.trim() === expectedFlag) {
+            const { error: solveError } = await supabase.from("solves").insert({
+                user_id: user.id,
+                challenge_id: challengeId,
+            });
+
+            if (solveError) {
+                return { error: "Database error recording solve." };
+            }
+
+            revalidatePath("/challenges");
+            revalidatePath("/leaderboard");
+            return {
+                success: true,
+                message: `Correct! You solved ${challenge.title}.`,
+            };
+        } else {
+            return { error: "Incorrect flag. Try again." };
+        }
     }
 }

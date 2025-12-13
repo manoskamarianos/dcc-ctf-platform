@@ -26,11 +26,11 @@ import {
     Zap,
     Lightbulb,
     ShieldAlert,
+    Globe,
 } from "lucide-react";
 import { submitFlag } from "./actions";
 import ReactMarkdown from "react-markdown";
 
-// Added Hints to the interface
 interface Challenge {
     id: string;
     title: string;
@@ -40,8 +40,9 @@ interface Challenge {
     description: string;
     file_url?: string | null;
     solved: boolean;
-    hints: { content: string }[]; // New field
+    hints: { content: string }[];
     debug_flag?: string | null;
+    htb_id?: number | null; // <--- Added HTB ID
 }
 
 const getDifficultyColor = (diff: string) => {
@@ -115,7 +116,10 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
 
         if (result.success) {
             setStatus({ type: "success", msg: result.message! });
-            setTimeout(() => setIsOpen(false), 2000);
+            setTimeout(() => {
+                setIsOpen(false);
+                // Optional: router.refresh() if needed, usually server action handles it
+            }, 2000);
         } else {
             setStatus({ type: "error", msg: result.error! });
         }
@@ -153,12 +157,30 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
 
                     <CardHeader className="pb-2 space-y-1">
                         <div className="flex justify-between items-start">
-                            <Badge
-                                variant="outline"
-                                className="border-gray-700 text-gray-400 font-mono text-[10px] uppercase tracking-wider mb-2"
-                            >
-                                {challenge.category}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                                <Badge
+                                    variant="outline"
+                                    className="border-gray-700 text-gray-400 font-mono text-[10px] uppercase tracking-wider mb-2"
+                                >
+                                    {challenge.category}
+                                </Badge>
+                                {/* Source Badge */}
+                                {challenge.htb_id ? (
+                                    <Badge
+                                        variant="secondary"
+                                        className="mb-2 bg-purple-900/20 text-purple-400 border-purple-900/50 text-[10px]"
+                                    >
+                                        HTB
+                                    </Badge>
+                                ) : (
+                                    <Badge
+                                        variant="secondary"
+                                        className="mb-2 bg-gray-800 text-gray-400 text-[10px]"
+                                    >
+                                        LOCAL
+                                    </Badge>
+                                )}
+                            </div>
                             <span className="font-mono text-terminal-green font-bold text-sm tracking-tight group-hover:text-white transition-colors">
                                 {challenge.points} PTS
                             </span>
@@ -209,10 +231,33 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
                         <span className="uppercase text-white">
                             {challenge.category}
                         </span>
+                        {challenge.htb_id && (
+                            <>
+                                <span>//</span>
+                                <span className="text-purple-400">REMOTE</span>
+                            </>
+                        )}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="p-6 space-y-6 overflow-y-auto">
+                    {/* HTB Notice */}
+                    {challenge.htb_id && (
+                        <div className="bg-purple-950/20 border border-purple-900/50 p-3 rounded flex items-start gap-3">
+                            <Globe className="h-5 w-5 text-purple-400 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                                <p className="text-sm text-purple-100 font-bold">
+                                    HackTheBox Linked Challenge
+                                </p>
+                                <p className="text-xs text-purple-200/70 leading-relaxed">
+                                    Submitting the flag here will attempt to
+                                    verify it directly against HackTheBox
+                                    servers using your configured API Token.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Description Area */}
                     <div className="font-mono text-sm text-gray-300 leading-relaxed bg-gray-950/50 p-4 border-l-2 border-gray-700">
                         <ReactMarkdown
@@ -262,7 +307,7 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
                         </div>
                     )}
 
-                    {/* --- NEW HINTS SECTION --- */}
+                    {/* Hints Section */}
                     {challenge.hints && challenge.hints.length > 0 && (
                         <div className="space-y-3">
                             <h4 className="text-sm font-bold text-yellow-500 flex items-center gap-2 turret-bold tracking-wider">
@@ -285,6 +330,7 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
                         </div>
                     )}
 
+                    {/* Admin Debug Flag */}
                     {challenge.debug_flag && (
                         <div className="bg-red-950/20 border border-red-900/50 p-3 rounded space-y-2">
                             <div className="flex items-center gap-2 text-red-400 font-bold text-xs uppercase tracking-wider">
@@ -294,12 +340,8 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
                             <div className="bg-black/50 p-2 rounded border border-red-900/30 font-mono text-sm text-red-200 break-all">
                                 {challenge.debug_flag}
                             </div>
-                            <p className="text-[10px] text-gray-500 font-mono">
-                                This is the expected flag for YOUR user ID.
-                            </p>
                         </div>
                     )}
-                    {/* ------------------------- */}
 
                     {/* Input Section */}
                     {!challenge.solved ? (

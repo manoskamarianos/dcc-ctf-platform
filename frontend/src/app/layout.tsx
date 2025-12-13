@@ -1,47 +1,42 @@
-import type { Metadata } from "next";
-import "@/scss/main.scss";
+import { createClient } from "@/lib/supabase/server";
 import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
-import { createClient } from "@/lib/supabase/server";
+import "@/scss/main.scss";
 
-export const metadata: Metadata = {
-    title: "DIT CTF",
-    description: "Daily CTF Challenges Platform",
+export const metadata = {
+    title: "DCC CTF Platform",
+    description: "Daily Challenges & CTF Platform",
 };
 
 export default async function RootLayout({
     children,
-}: Readonly<{
+}: {
     children: React.ReactNode;
-}>) {
+}) {
     const supabase = await createClient();
 
-    // 1. Get the authenticated user (Auth layer)
+    // Fetch user data for the Header (but DO NOT redirect here)
     const {
         data: { user },
     } = await supabase.auth.getUser();
 
-    let userProfile = null;
-
-    // 2. If user exists, get their profile (Database layer)
+    let profile = null;
     if (user) {
-        const { data: profile } = await supabase
+        const { data } = await supabase
             .from("users")
-            .select("*")
+            .select("username, is_admin, htb_id")
             .eq("id", user.id)
             .single();
-
-        userProfile = profile;
+        profile = data;
     }
 
     return (
-        <html lang="en">
-            <body className="bg-background text-foreground min-h-screen flex flex-col font-turret">
-                {/* 3. Pass both user (auth) and profile (db) to the Header */}
-                <Header user={user} profile={userProfile} />
-
-                <main className="flex-1">{children}</main>
-
+        <html lang="en" className="dark">
+            <body className="min-h-screen flex flex-col bg-black text-foreground">
+                <Header user={user} profile={profile} />
+                <main className="flex-1">
+                    {children}
+                </main>
                 <Footer />
             </body>
         </html>

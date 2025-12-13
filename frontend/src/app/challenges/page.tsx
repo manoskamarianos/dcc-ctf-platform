@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import ChallengeGrid from "./challenge-grid";
-import { generateUserFlag } from "@/lib/flag-generator"; // Import the generator
+import { generateUserFlag } from "@/lib/flag-generator";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +27,7 @@ export default async function ChallengesPage() {
     const isAdmin = profile?.is_admin === true;
 
     // 3. Fetch Active Challenges
+    // Added 'htb_id' to the selection
     const { data: challengesData, error } = await supabase
         .from("challenges")
         .select(`*, hints (content), solves (user_id)`)
@@ -45,16 +46,16 @@ export default async function ChallengesPage() {
             points: c.points,
             description: c.description,
             file_url: c.file_url,
+            htb_id: c.htb_id, // <--- Pass this to the grid
             solved: c.solves.some(
                 (s: { user_id: string }) => s.user_id === user.id,
             ),
             hints: c.hints || [],
 
-            // --- NEW LOGIC ---
-            // Only send the calculated flag if the user is an Admin
-            // Or if it's a "Sanity Check" (free flag for everyone)
+            // Only generate a local debug flag if it's NOT an HTB challenge
+            // HTB challenges don't have local flags to generate.
             debug_flag:
-                isAdmin || c.category === "Sanity Check"
+                (isAdmin || c.category === "Sanity Check") && !c.htb_id
                     ? generateUserFlag(c.flag_template, c.server_seed, user.id)
                     : null,
         })) || [];

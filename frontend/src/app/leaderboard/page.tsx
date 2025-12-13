@@ -1,5 +1,3 @@
-// frontend/src/app/leaderboard/page.tsx
-
 import { createClient } from "@/lib/supabase/server";
 import {
     Table,
@@ -11,20 +9,29 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal, Crown, Terminal, Activity } from "lucide-react";
+import {
+    Trophy,
+    Medal,
+    Crown,
+    Terminal,
+    Activity,
+    Server,
+    Flag,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function LeaderboardPage() {
     const supabase = await createClient();
 
-    // Assumption: You have a view or logic to get this data.
-    // If you haven't created the view yet, this might return null/error,
-    // but the UI will handle the empty state.
-    const { data: leaderboard } = await supabase
+    const { data: leaderboard, error } = await supabase
         .from("leaderboard_view")
         .select("*")
         .limit(50);
+
+    if (error) {
+        console.error("Leaderboard error:", error);
+    }
 
     const getRankIcon = (index: number) => {
         if (index === 0)
@@ -97,13 +104,21 @@ export default async function LeaderboardPage() {
                                         Rank
                                     </TableHead>
                                     <TableHead className="text-terminal-green turret-bold uppercase tracking-wider">
-                                        Operative_ID
+                                        Identity
                                     </TableHead>
-                                    <TableHead className="text-right text-terminal-green turret-bold uppercase tracking-wider">
-                                        Captures
+                                    <TableHead className="text-center text-gray-500 turret-bold uppercase tracking-wider">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <Server className="w-3 h-3" />{" "}
+                                            Machines
+                                        </div>
+                                    </TableHead>
+                                    <TableHead className="text-center text-gray-500 turret-bold uppercase tracking-wider">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <Flag className="w-3 h-3" /> Challs
+                                        </div>
                                     </TableHead>
                                     <TableHead className="text-right text-terminal-green turret-bold uppercase tracking-wider pr-6">
-                                        Score
+                                        Total Score
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -112,7 +127,7 @@ export default async function LeaderboardPage() {
                                 {(!leaderboard || leaderboard.length === 0) && (
                                     <TableRow>
                                         <TableCell
-                                            colSpan={4}
+                                            colSpan={5}
                                             className="h-32 text-center text-gray-500 font-mono"
                                         >
                                             // DATABASE_CONNECTION_PENDING...
@@ -122,7 +137,7 @@ export default async function LeaderboardPage() {
 
                                 {leaderboard?.map((user, index) => (
                                     <TableRow
-                                        key={user.username || index}
+                                        key={user.id}
                                         className={`border-b border-gray-900/50 ${getRankRowStyle(index)}`}
                                     >
                                         <TableCell className="font-medium pl-6 py-4">
@@ -147,15 +162,25 @@ export default async function LeaderboardPage() {
                                                 )}
                                             </div>
                                         </TableCell>
-                                        <TableCell className="text-right text-gray-400 font-mono text-lg">
-                                            {user.solve_count || 0}
+                                        <TableCell className="text-center font-mono text-gray-400">
+                                            <span className="text-blue-400">
+                                                {user.machine_points || 0}
+                                            </span>
+                                            <span className="text-gray-600 text-xs ml-1">
+                                                pts
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-center font-mono text-gray-400">
+                                            <span className="text-purple-400">
+                                                {user.challenge_points || 0}
+                                            </span>
+                                            <span className="text-gray-600 text-xs ml-1">
+                                                pts
+                                            </span>
                                         </TableCell>
                                         <TableCell className="text-right pr-6">
                                             <span className="font-mono text-terminal-green text-xl font-bold tracking-tight">
                                                 {user.total_points || 0}
-                                            </span>
-                                            <span className="text-xs text-gray-600 ml-1">
-                                                PTS
                                             </span>
                                         </TableCell>
                                     </TableRow>

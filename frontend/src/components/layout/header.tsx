@@ -14,11 +14,12 @@ import {
     LogOut,
     User as UserIcon,
     ShieldAlert,
+    Server,
+    Swords, // Icon for Contests
 } from "lucide-react";
 import "@/scss/components/_header.scss";
 import { signout } from "@/app/auth/actions";
 
-// Define the shape of the profile data from your DB
 interface UserProfile {
     username: string;
     is_admin: boolean;
@@ -33,7 +34,6 @@ interface HeaderProps {
 export default function Header({ user, profile }: HeaderProps) {
     const [isFullPage, setIsFullPage] = useState(true);
 
-    // Determine display name: Username (preferred) > Email > "Hacker"
     const displayName = profile?.username || user?.email || "Hacker";
     const isAdmin = profile?.is_admin || false;
 
@@ -79,6 +79,20 @@ export default function Header({ user, profile }: HeaderProps) {
                         >
                             <Flag size={16} />
                             <span>CHALLENGES</span>
+                        </Link>
+                        <Link
+                            href="/machines"
+                            className="flex items-center gap-1.5 px-3 py-2 hover:bg-terminal-green/10 hover:text-terminal-green rounded-md transition-all"
+                        >
+                            <Server size={16} />
+                            <span>MACHINES</span>
+                        </Link>
+                        <Link
+                            href="/contests"
+                            className="flex items-center gap-1.5 px-3 py-2 hover:bg-terminal-green/10 hover:text-terminal-green rounded-md transition-all"
+                        >
+                            <Swords size={16} />
+                            <span>CONTESTS</span>
                         </Link>
                         <Link
                             href="/leaderboard"
@@ -190,6 +204,20 @@ export default function Header({ user, profile }: HeaderProps) {
                                         <span>Challenges</span>
                                     </Link>
                                     <Link
+                                        href="/machines"
+                                        className="flex items-center gap-3 p-3 text-gray-300 hover:bg-terminal-green/10 hover:text-terminal-green rounded-md transition-colors"
+                                    >
+                                        <Server size={20} />
+                                        <span>Machines</span>
+                                    </Link>
+                                    <Link
+                                        href="/contests"
+                                        className="flex items-center gap-3 p-3 text-gray-300 hover:bg-terminal-green/10 hover:text-terminal-green rounded-md transition-colors"
+                                    >
+                                        <Swords size={20} />
+                                        <span>Contests</span>
+                                    </Link>
+                                    <Link
                                         href="/leaderboard"
                                         className="flex items-center gap-3 p-3 text-gray-300 hover:bg-terminal-green/10 hover:text-terminal-green rounded-md transition-colors"
                                     >
@@ -210,10 +238,7 @@ export default function Header({ user, profile }: HeaderProps) {
                                 <div className="p-4 border-t border-gray-800 bg-gray-900/30">
                                     {user ? (
                                         <div className="space-y-4">
-                                            <Link
-                                                href="/profile"
-                                                className="flex items-center gap-3 p-2 rounded-md bg-black border border-gray-800"
-                                            >
+                                            <div className="flex items-center gap-3 p-2 rounded-md bg-black border border-gray-800">
                                                 <div className="bg-terminal-green/20 p-2 rounded-full">
                                                     <UserIcon
                                                         size={16}
@@ -228,7 +253,7 @@ export default function Header({ user, profile }: HeaderProps) {
                                                         Online
                                                     </span>
                                                 </div>
-                                            </Link>
+                                            </div>
                                             <form action={signout}>
                                                 <Button
                                                     type="submit"
