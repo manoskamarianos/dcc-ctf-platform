@@ -20,16 +20,47 @@ import { Badge } from "@/components/ui/badge";
 import { Server, Plus, Monitor, Terminal } from "lucide-react";
 import AdminMachineActions from "./admin-machine-actions";
 import SyncHtbButton from "./sync-htb-button";
-import PurgeMachinesButton from "./purge-htb-button"; // <--- Import here
+import PurgeMachinesButton from "./purge-htb-button";
+import SearchBar from "@/components/ui/search-bar";
+import PaginationControls from "@/components/ui/pagination-controls";
 
-export default async function AdminMachines() {
+export const dynamic = "force-dynamic";
+
+interface AdminMachinesProps {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function AdminMachines({
+    searchParams,
+}: AdminMachinesProps) {
     const supabase = await createClient();
 
-    // Fetch machines ordered by creation date
-    const { data: machines, error } = await supabase
+    // Handle search params
+    const resolvedSearchParams = await searchParams;
+    const page = Number(resolvedSearchParams.page) || 1;
+    const searchQuery = (resolvedSearchParams.search as string)?.toLowerCase() || "";
+
+    const ITEMS_PER_PAGE = 20;
+    const from = (page - 1) * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    // Build query with search
+    let query = supabase
         .from("machines")
-        .select("*")
+        .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
+
+    // Apply search filter if provided
+    if (searchQuery) {
+        query = query.ilike("title", `%${searchQuery}%`);
+    }
+
+    // Execute query with pagination
+    const {
+        data: machines,
+        error,
+        count,
+    } = await query.range(from, to);
 
     if (error) {
         return (
@@ -78,13 +109,25 @@ export default async function AdminMachines() {
 
             <Card className="bg-gray-950 border-gray-800">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Server className="h-5 w-5 text-purple-500" />
-                        Machine Database
-                    </CardTitle>
-                    <CardDescription>
-                        List of all registered target systems
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2">
+                                <Server className="h-5 w-5 text-purple-500" />
+                                Machine Database
+                            </CardTitle>
+                            <CardDescription>
+                                List of all registered target systems
+                                {count !== null && (
+                                    <span className="ml-2 text-gray-500">
+                                        ({count} total)
+                                    </span>
+                                )}
+                            </CardDescription>
+                        </div>
+                        <div className="w-full max-w-md">
+                            <SearchBar placeholder="Search machines by name..." />
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -191,6 +234,16 @@ export default async function AdminMachines() {
                     </Table>
                 </CardContent>
             </Card>
+
+            {count !== null && count > ITEMS_PER_PAGE && (
+                <div className="flex justify-center">
+                    <PaginationControls
+                        totalItems={count}
+                        itemsPerPage={ITEMS_PER_PAGE}
+                        baseUrl="/admin/machines"
+                    />
+                </div>
+            )}
         </div>
     );
 }

@@ -20,16 +20,47 @@ import { Badge } from "@/components/ui/badge";
 import { Flag, Plus, FileCode, Layers } from "lucide-react";
 import ChallengeActions from "./challenge-actions";
 import SyncChallengesButton from "./sync-challenges-button";
-import PurgeChallengesButton from "./purge-challenges-button"; // <--- Import this
+import PurgeChallengesButton from "./purge-challenges-button";
+import SearchBar from "@/components/ui/search-bar";
+import PaginationControls from "@/components/ui/pagination-controls";
 
-export default async function AdminChallenges() {
+export const dynamic = "force-dynamic";
+
+interface AdminChallengesProps {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function AdminChallenges({
+    searchParams,
+}: AdminChallengesProps) {
     const supabase = await createClient();
 
-    // Fetch challenges ordered by creation date
-    const { data: challenges, error } = await supabase
+    // Handle search params
+    const resolvedSearchParams = await searchParams;
+    const page = Number(resolvedSearchParams.page) || 1;
+    const searchQuery = (resolvedSearchParams.search as string)?.toLowerCase() || "";
+
+    const ITEMS_PER_PAGE = 20;
+    const from = (page - 1) * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    // Build query with search
+    let query = supabase
         .from("challenges")
-        .select("*")
+        .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
+
+    // Apply search filter if provided
+    if (searchQuery) {
+        query = query.ilike("title", `%${searchQuery}%`);
+    }
+
+    // Execute query with pagination
+    const {
+        data: challenges,
+        error,
+        count,
+    } = await query.range(from, to);
 
     if (error) {
         return (
@@ -86,15 +117,26 @@ export default async function AdminChallenges() {
             </div>
 
             <Card className="bg-gray-950 border-gray-800">
-                {/* ... rest of the file remains the same ... */}
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Layers className="h-5 w-5 text-purple-500" />
-                        Active Deployments
-                    </CardTitle>
-                    <CardDescription>
-                        List of all configured challenges
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2">
+                                <Layers className="h-5 w-5 text-purple-500" />
+                                Active Deployments
+                            </CardTitle>
+                            <CardDescription>
+                                List of all configured challenges
+                                {count !== null && (
+                                    <span className="ml-2 text-gray-500">
+                                        ({count} total)
+                                    </span>
+                                )}
+                            </CardDescription>
+                        </div>
+                        <div className="w-full max-w-md">
+                            <SearchBar placeholder="Search challenges by name..." />
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -208,6 +250,16 @@ export default async function AdminChallenges() {
                     </Table>
                 </CardContent>
             </Card>
+
+            {count !== null && count > ITEMS_PER_PAGE && (
+                <div className="flex justify-center">
+                    <PaginationControls
+                        totalItems={count}
+                        itemsPerPage={ITEMS_PER_PAGE}
+                        baseUrl="/admin/challenges"
+                    />
+                </div>
+            )}
         </div>
     );
 }

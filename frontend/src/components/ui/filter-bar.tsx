@@ -48,9 +48,9 @@ export default function FilterBar({ filters }: FilterBarProps) {
         router.push(pathname);
     };
 
-    // Check if any of our filter keys are currently active in the URL
+    // Check if any of our filter keys or search are currently active in the URL
     const hasActiveFilters = Array.from(searchParams.keys()).some(
-        (key) => key !== "page" && filters.some((f) => f.key === key),
+        (key) => key !== "page" && (filters.some((f) => f.key === key) || key === "search"),
     );
 
     return (

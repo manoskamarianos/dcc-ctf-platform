@@ -72,6 +72,8 @@ export async function syncTargetUserProgress(targetUserId: string) {
             getUserMachineProgress(apiToken, targetProfile.htb_id),
         ]);
 
+        console.log(`Sync: Found ${htbChallenges.length} challenges and ${htbMachines.length} machines for user ${targetProfile.username}`);
+
         if (htbChallenges.length === 0 && htbMachines.length === 0) {
             return {
                 success: true,

@@ -74,6 +74,14 @@ export interface HtbSolveResponse {
     incorrect?: number;
 }
 
+// Activity item from HTB API (matches bot.py structure)
+export interface HtbActivityItem {
+    id: number;
+    object_type: "machine" | "challenge" | string;
+    name: string;
+    type: "user" | "root" | string; // For machines: "user" or "root"
+}
+
 // --- Helpers ---
 
 // Helper to delay requests (Rate Limit Protection)
@@ -164,14 +172,14 @@ export async function getChallengeDetail(
 
 /**
  * Fetch the list of CHALLENGES solved by a specific HTB User.
- * UPDATED: Uses the /user/profile/progress endpoint.
+ * Uses the activity endpoint (same as bot.py) for consistency and reliability.
  */
 export async function getUserChallengeProgress(
     token: string,
     htbUserId: string | number
 ): Promise<HtbUserChallengeProgress[]> {
     try {
-        const url = `${HTB_API_URL}/user/profile/progress/challenges/${htbUserId}`;
+        const url = `${HTB_API_URL}/user/profile/activity/${htbUserId}`;
         console.log(`Fetching Challenges for user ${htbUserId}...`); // Debug Log
 
         const res = await fetch(url, {
@@ -183,12 +191,37 @@ export async function getUserChallengeProgress(
         });
 
         if (!res.ok) {
+            if (res.status === 404) {
+                return [];
+            }
             console.warn(`Failed to fetch user challenges (Status: ${res.status}). URL: ${url}`);
             return [];
         }
 
         const data = await res.json();
-        return data.challenges || [];
+        const activities = data.profile?.activity || [];
+        
+        // Filter for challenges (any challenge activity counts as solved)
+        const challengeActivities = activities.filter(
+            (activity: HtbActivityItem) => activity.object_type === "challenge"
+        );
+        
+        // Extract unique challenges (in case there are duplicates)
+        const challengeMap = new Map<number, HtbActivityItem>();
+        challengeActivities.forEach((activity: HtbActivityItem) => {
+            if (!challengeMap.has(activity.id)) {
+                challengeMap.set(activity.id, activity);
+            }
+        });
+        
+        // Convert to HtbUserChallengeProgress format
+        return Array.from(challengeMap.values()).map((activity) => ({
+            id: activity.id,
+            name: activity.name,
+            points: 0, // Activity doesn't include points, will need to be fetched separately if needed
+            difficulty: "", // Activity doesn't include difficulty
+            challenge_category: 0, // Activity doesn't include category
+        }));
     } catch (error) {
         console.error("Error fetching user challenge progress:", error);
         return [];
@@ -196,8 +229,90 @@ export async function getUserChallengeProgress(
 }
 
 /**
+ * Fetch user activity from HTB (matches bot.py logic).
+ * Returns all activity items including machines and challenges.
+ */
+export async function getUserActivity(
+    token: string,
+    htbUserId: string | number
+): Promise<HtbActivityItem[]> {
+    try {
+        const url = `${HTB_API_URL}/user/profile/activity/${htbUserId}`;
+        const res = await fetch(url, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "User-Agent": "DCC-CTF-Platform/1.0",
+            },
+            cache: "no-store",
+        });
+
+        if (!res.ok) {
+            if (res.status === 404) {
+                return [];
+            }
+            console.warn(`Failed to fetch user activity (Status: ${res.status}). URL: ${url}`);
+            return [];
+        }
+
+        const data = await res.json();
+        // Activity is nested in profile.activity
+        const activities = data.profile?.activity || [];
+        console.log(`[HTB Client] Fetched ${activities.length} total activities for user ${htbUserId}`);
+        const challengeActivities = activities.filter((a: HtbActivityItem) => a.object_type === "challenge");
+        console.log(`[HTB Client] Found ${challengeActivities.length} challenge activities`);
+        return activities;
+    } catch (error) {
+        console.error("Error fetching user activity:", error);
+        return [];
+    }
+}
+
+/**
+ * Check if a specific challenge is solved by the user via HTB activity.
+ * Returns true if the challenge ID appears in the user's activity.
+ * Can optionally pass pre-fetched activities to avoid multiple API calls.
+ */
+export async function isChallengeSolvedViaHtb(
+    token: string,
+    htbUserId: string | number,
+    challengeHtbId: number,
+    activities?: HtbActivityItem[]
+): Promise<boolean> {
+    if (!challengeHtbId) return false;
+    
+    const activityList = activities || await getUserActivity(token, htbUserId);
+    return activityList.some(
+        (activity) =>
+            activity.object_type === "challenge" &&
+            activity.id === challengeHtbId
+    );
+}
+
+/**
+ * Check if a specific machine is solved (root flag) by the user via HTB activity.
+ * Returns true if the machine ID has a "root" type activity (matches bot.py logic).
+ * Can optionally pass pre-fetched activities to avoid multiple API calls.
+ */
+export async function isMachineSolvedViaHtb(
+    token: string,
+    htbUserId: string | number,
+    machineHtbId: number,
+    activities?: HtbActivityItem[]
+): Promise<boolean> {
+    if (!machineHtbId) return false;
+    
+    const activityList = activities || await getUserActivity(token, htbUserId);
+    return activityList.some(
+        (activity) =>
+            activity.object_type === "machine" &&
+            activity.id === machineHtbId &&
+            activity.type === "root"
+    );
+}
+
+/**
  * Fetch the list of MACHINES owned by a specific HTB User.
- * UPDATED: Uses the /user/profile/progress endpoint.
+ * Uses the activity endpoint and filters for root flags only (matching bot.py logic).
  */
 export async function getUserMachineProgress(
     token: string,
@@ -216,12 +331,38 @@ export async function getUserMachineProgress(
         });
 
         if (!res.ok) {
-             console.warn(`Failed to fetch user machines (Status: ${res.status}). URL: ${url}`);
+            if (res.status === 404) {
+                return [];
+            }
+            console.warn(`Failed to fetch user machines (Status: ${res.status}). URL: ${url}`);
             return [];
         }
 
         const data = await res.json();
-        return data.machines || [];
+        const activities = data.profile?.activity || [];
+        
+        // Filter for machines with root flags only (matching bot.py logic)
+        const machineActivities = activities.filter(
+            (activity: HtbActivityItem) =>
+                activity.object_type === "machine" && activity.type === "root"
+        );
+        
+        // Extract unique machines (in case there are duplicates)
+        const machineMap = new Map<number, HtbActivityItem>();
+        machineActivities.forEach((activity: HtbActivityItem) => {
+            if (!machineMap.has(activity.id)) {
+                machineMap.set(activity.id, activity);
+            }
+        });
+        
+        // Convert to HtbUserMachineProgress format
+        return Array.from(machineMap.values()).map((activity) => ({
+            id: activity.id,
+            name: activity.name,
+            os: "", // Activity doesn't include OS, will need to be fetched separately if needed
+            points: 0, // Activity doesn't include points
+            avatar: "", // Activity doesn't include avatar
+        }));
     } catch (error) {
         console.error("Error fetching user machine progress:", error);
         return [];

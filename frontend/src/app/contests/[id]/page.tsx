@@ -5,6 +5,7 @@ import { Calendar, Clock, Flag, Server, AlertTriangle } from "lucide-react";
 import ChallengeGrid from "@/app/challenges/challenge-grid";
 import MachineGrid from "@/app/machines/machine-grid";
 import { generateUserFlag } from "@/lib/flag-generator";
+import { getUserActivity } from "@/lib/htb-client";
 
 // --- Type Definitions to fix "implicit any" errors ---
 interface Challenge {
@@ -47,6 +48,16 @@ export default async function ContestLobbyPage({ params }: PageProps) {
     } = await supabase.auth.getUser();
 
     if (!user) redirect("/login");
+
+    // Get user HTB info for activity checking
+    const { data: profile } = await supabase
+        .from("users")
+        .select("htb_id, htb_token")
+        .eq("id", user.id)
+        .single();
+
+    const userHtbId = profile?.htb_id;
+    const userHtbToken = profile?.htb_token || process.env.HTB_SYSTEM_TOKEN;
 
     // 1. Fetch Contest Details
     const { data: contest, error: contestError } = await supabase
@@ -97,7 +108,17 @@ export default async function ContestLobbyPage({ params }: PageProps) {
         ?.filter((i) => i.machine_id)
         .map((i) => i.machine_id) as string[];
 
-    // 4. Fetch the actual content data + User Solves
+    // 4. Fetch HTB activity once if user has HTB credentials
+    let htbActivities: any[] = [];
+    if (userHtbId && userHtbToken) {
+        try {
+            htbActivities = await getUserActivity(userHtbToken, userHtbId);
+        } catch (error) {
+            console.error("Error fetching HTB activity:", error);
+        }
+    }
+
+    // 5. Fetch the actual content data + User Solves
 
     // A. Challenges
     // Initialize with explicit type to fix TS error
@@ -118,8 +139,22 @@ export default async function ContestLobbyPage({ params }: PageProps) {
             .single();
         const isAdmin = profile?.is_admin === true;
 
-        challenges =
-            chData?.map((c) => ({
+        challenges = (chData || []).map((c) => {
+            const localSolved = c.solves.some(
+                (s: { user_id: string }) => s.user_id === user.id,
+            );
+            
+            // Check HTB activity if this is an HTB challenge
+            let htbSolved = false;
+            if (c.htb_id && htbActivities.length > 0) {
+                htbSolved = htbActivities.some(
+                    (activity) =>
+                        activity.object_type === "challenge" &&
+                        activity.id === c.htb_id
+                );
+            }
+            
+            return {
                 id: c.id,
                 title: c.title,
                 category: c.category,
@@ -128,9 +163,7 @@ export default async function ContestLobbyPage({ params }: PageProps) {
                 description: c.description,
                 file_url: c.file_url,
                 htb_id: c.htb_id,
-                solved: c.solves.some(
-                    (s: { user_id: string }) => s.user_id === user.id,
-                ),
+                solved: localSolved || htbSolved,
                 hints: c.hints || [],
                 debug_flag:
                     (isAdmin || c.category === "Sanity Check") && !c.htb_id
@@ -140,7 +173,8 @@ export default async function ContestLobbyPage({ params }: PageProps) {
                               user.id,
                           )
                         : null,
-            })) || [];
+            };
+        });
     }
 
     // B. Machines
@@ -154,8 +188,23 @@ export default async function ContestLobbyPage({ params }: PageProps) {
             .in("id", machineIds)
             .eq("is_active", true);
 
-        machines =
-            macData?.map((m) => ({
+        machines = (macData || []).map((m) => {
+            const localSolved = m.machine_solves.some(
+                (s: { user_id: string }) => s.user_id === user.id,
+            );
+            
+            // Check HTB activity if this is an HTB machine (only root flags count as solved)
+            let htbSolved = false;
+            if (m.htb_id && htbActivities.length > 0) {
+                htbSolved = htbActivities.some(
+                    (activity) =>
+                        activity.object_type === "machine" &&
+                        activity.id === m.htb_id &&
+                        activity.type === "root"
+                );
+            }
+            
+            return {
                 id: m.id,
                 title: m.title,
                 os: m.os,
@@ -163,10 +212,9 @@ export default async function ContestLobbyPage({ params }: PageProps) {
                 points: m.points,
                 avatar_url: m.avatar_url,
                 htb_id: m.htb_id,
-                solved: m.machine_solves.some(
-                    (s: { user_id: string }) => s.user_id === user.id,
-                ),
-            })) || [];
+                solved: localSolved || htbSolved,
+            };
+        });
     }
 
     const isEnded = now > end;
